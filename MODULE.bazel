@@ -1,0 +1,44 @@
+module(name = "your_project_name_here", version = "0.1")
+
+bazel_dep(name = "rules_haskell", version = "0.19")
+bazel_dep(name = "rules_cc", version = "0.0.9")
+
+haskell_toolchains = use_extension(
+    "@rules_haskell//extensions:haskell_toolchains.bzl",
+    "haskell_toolchains",
+)
+
+haskell_toolchains.bindists(version = "9.2.8")
+
+non_module_deps = use_extension(
+    "//:non_module_deps.bzl",
+    "non_module_deps",
+)
+
+stack = use_extension(
+    "@rules_haskell//extensions:stack_snapshot.bzl",
+    "stack_snapshot",
+)
+
+use_repo(
+    stack,
+    "stackage",
+    "stackage-exe",
+    "stackage-unpinned",
+)
+
+stack.package(name = "bytestring")
+stack.package(name = "hashable")
+stack.package(name = "unordered-containers")
+stack.package(name = "network-uri")
+stack.package(name = "utf8-string")
+stack.package(name = "uuid")
+
+# LTS snapshot published for ghc-9.2.8 (default version used by rules_haskell)
+#stack.snapshot(name = "lts-20.26")
+stack.local_snapshot()
+
+# This uses an unpinned version of stack_snapshot, meaning that stack is invoked on every build.
+# To switch to pinned stackage dependencies, run `bazel run @stackage-unpinned//:pin` and
+# uncomment the following line.
+stack.stack_snapshot_json(label = "//:stackage_snapshot.json")
